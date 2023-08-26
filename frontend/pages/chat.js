@@ -1,3 +1,6 @@
+/**
+ * Important imports
+ */
 import Head from "next/head";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
@@ -9,19 +12,25 @@ import io from "socket.io-client";
 
 const inter = Inter({ subsets: ["latin"] });
 
+/**
+ * Chat Page
+ * @returns
+ */
 export default function Chat() {
+
+    // To navigate
     const router = useRouter();
 
+    // Get access token from cookies
     const accessToken = Cookies.get("access_token");
 
+    /**
+     * Use states
+     */
     const [firstTime, setIsFirstTime] = useState(true);
-
     const [messages, setMessages] = useState([]);
-
     const [inputMessage, setInputMessage] = useState("");
-
     const [socket, setSocket] = useState(null);
-
     const chatContainerRef = useRef(null);
 
     // Function to fetch and validate the protected route
@@ -36,6 +45,7 @@ export default function Chat() {
                 }
             );
 
+            // User is validated
             if (response.status === 200) {
                 console.log("User is validated");
             }
@@ -45,12 +55,16 @@ export default function Chat() {
         }
     };
 
+    /**
+     * Use effect to check that the user credentials are correct to enter this page
+     */
     useEffect(() => {
         if (firstTime) {
             fetchProtectedRoute();
             setIsFirstTime(false);
         }
 
+        // Validate every 5 minutes
         const intervalId = setInterval(() => {
             fetchProtectedRoute();
         }, 5 * 60 * 1000);
@@ -60,16 +74,22 @@ export default function Chat() {
         };
     }, []);
 
+    /**
+     * Use effect to scroll down to the latest message if messages hook is changed
+     */
     useEffect(() => {
-      if (chatContainerRef.current) {
-          // Scroll to the bottom of the chat container
-          chatContainerRef.current.scrollTo({
-              top: chatContainerRef.current.scrollHeight,
-              behavior: 'smooth'
-          });
-      }
-  }, [messages]);
+        if (chatContainerRef.current) {
+            // Scroll to the bottom of the chat container
+            chatContainerRef.current.scrollTo({
+                top: chatContainerRef.current.scrollHeight,
+                behavior: "smooth",
+            });
+        }
+    }, [messages]);
 
+    /**
+     * Use effect to connect socket with the backend
+     */
     useEffect(() => {
         const newSocket = io("http://localhost:4000", {
             transports: ["websocket", "polling", "flashsocket"],
@@ -91,23 +111,27 @@ export default function Chat() {
     const sendMessage = () => {
         if (socket) {
             socket.emit("send_message", inputMessage, router.query.username); // Emit the message to the server
-            setInputMessage(""); 
+            setInputMessage("");
         }
     };
-    
+
+    /**
+     * On receiving a new message, update the messages use state
+     */
     useEffect(() => {
-      if (socket) {
-        //Event listener when receiving changes from server to update quill contents
-        socket.on("receive_message", (newMessage) => {
-          setMessages((prevMessages) => [...prevMessages, newMessage]);
-        });
-  
-  
-      return () => {
-        socket.off("receive_message");
-      };
-    }
-  }, [socket]);
+        if (socket) {
+            //Event listener when receiving changes from server to update quill contents
+            socket.on("receive_message", (newMessage) => {
+                setMessages((prevMessages) => [...prevMessages, newMessage]);
+            });
+
+            return () => {
+                socket.off("receive_message");
+            };
+        }
+    }, [socket]);
+
+    
     return (
         <>
             <Head>
@@ -120,8 +144,14 @@ export default function Chat() {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <main className={`${styles.main} ${inter.className}`}>
+                <div className={styles.titleContainer}>
+                    <h1>Chatting App</h1>
+                </div>
                 <div className={styles.chatContainer}>
-                    <div className={styles.messageContainer} ref={chatContainerRef}>
+                    <div
+                        className={styles.messageContainer}
+                        ref={chatContainerRef}
+                    >
                         {messages.map((message, index) => (
                             <div key={index} className={styles.message}>
                                 <div className={styles.username}>

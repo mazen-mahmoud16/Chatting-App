@@ -1,3 +1,6 @@
+/**
+ * Important imports
+ */
 import Head from "next/head";
 import { Input, Button, Form, message } from "antd";
 import {
@@ -10,35 +13,47 @@ import Link from "next/link";
 import styles from "@/styles/Home.module.css";
 import { useState } from "react";
 import axios from "axios";
-import { useRouter } from 'next/router';
-import Cookies from 'js-cookie';
+import { useRouter } from "next/router";
+import Cookies from "js-cookie";
 
+/**
+ * Home (Login) Page
+ * @returns
+ */
 export default function Home() {
-
+    // Use states
     const [loading, setLoading] = useState(false);
+
+    // To navigate
     const router = useRouter();
 
+    // On Form Submit
     const onFinish = async (values) => {
         try {
             setLoading(true);
 
+            // Send post request to validate credentials
             const response = await axios.post("http://localhost:8000/login", {
                 email: values.email,
                 password: values.password,
             });
 
+            // User verified
             if (response.status === 200) {
-                message.success("Login successful"); 
-                // Store the token in a cookie that expires in 1 hour
-                Cookies.set('access_token', response.data.token, { expires: 1/24 });
-                router.push('/chat?username=' + response.data.username);
+                message.success("Login successful");
+                Cookies.set("access_token", response.data.token, {
+                    expires: 1 / 24,
+                });
+                router.push("/chat?username=" + response.data.username);
             }
         } catch (error) {
             console.error("An error occurred:", error);
+
+            // Show message to user containing the error
             if (error.response && error.response.data) {
-              message.error(error.response.data.message); 
+                message.error(error.response.data.message);
             } else {
-              message.error('An error occurred. Please try again later.'); 
+                message.error("An error occurred. Please try again later.");
             }
         }
         setLoading(false);

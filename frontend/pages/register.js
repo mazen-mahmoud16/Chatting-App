@@ -1,3 +1,6 @@
+/**
+ * Important imports
+ */
 import Head from "next/head";
 import { Input, Button, Form, message } from "antd";
 import {
@@ -12,31 +15,47 @@ import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 
+/**
+ * Register new account Page
+ * @returns
+ */
 export default function Register() {
+    // Use states
     const [loading, setLoading] = useState(false);
+
+    // To navigate
     const router = useRouter();
 
+    // On Form Submit
     const onFinish = async (values) => {
         try {
             setLoading(true);
 
-            if(values.password != values.confirmpassword){
-              message.error('Passwords do not match');
-              return;
+            // Checking whether password and confirm password are matching or not
+            if (values.password != values.confirmpassword) {
+                message.error("Passwords do not match");
+                return;
             }
 
-            const response = await axios.post("http://localhost:8000/register", {
-                username: values.username,
-                email: values.email,
-                password: values.password,
-            });
+            // Send post request to validate credentials
+            const response = await axios.post(
+                "http://localhost:8000/register",
+                {
+                    username: values.username,
+                    email: values.email,
+                    password: values.password,
+                }
+            );
 
+            // Account created
             if (response.status === 201) {
                 message.success("Register successful");
                 router.push("/");
             }
         } catch (error) {
             console.error("An error occurred:", error);
+
+            // Show message to user containing the error
             if (error.response && error.response.data) {
                 message.error(error.response.data.message);
             } else {
@@ -68,7 +87,7 @@ export default function Register() {
                                 {
                                     required: true,
                                     message: "Please input your username!",
-                                }
+                                },
                             ]}
                         >
                             <Input
@@ -146,9 +165,7 @@ export default function Register() {
                                 >
                                     Register
                                 </Button>
-                                <Link href="/">
-                                    Already have an account?
-                                </Link>
+                                <Link href="/">Already have an account?</Link>
                             </div>
                         </Form.Item>
                     </Form>
