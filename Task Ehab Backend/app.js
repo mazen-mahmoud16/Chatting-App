@@ -42,12 +42,14 @@ app.post("/register", async (req, res) => {
             },
         });
 
+        // If not return an error
         if (existingUser) {
             return res
                 .status(400)
                 .json({ message: "Username or email already exists" });
         }
 
+        // Create a new user
         const user = {
             username: username,
             email: email,
@@ -55,7 +57,6 @@ app.post("/register", async (req, res) => {
         };
 
         const createdUser = await prisma.User.create({
-            // Use prisma.user
             data: user,
         });
 
@@ -73,16 +74,22 @@ app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     try {
+
+        // Check whether the email exists in the db or not
         const user = await prisma.user.findUnique({ where: { email } });
+
+        // If the user does not exists, return error
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
+        // Check whether passwords match or not
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
+        // Generate an access token
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
             expiresIn: "1h",
         });
@@ -99,8 +106,7 @@ app.get("/protected", validateToken, async (req, res) => {
     res.status(200).json({ message: "Access granted to protected route" });
 });
 
-// First Parameter is the port needed to run ourcode (Server:4000)
-// use cors to allow communication of two different urls (clients,servers)
+// Create a socket and accept from port 3000 (client) 
 const socket_io = require("socket.io")(4000, {
     origin: "http://localhost:3000",
     methods: ["GET", "POST"],
@@ -125,8 +131,10 @@ socket_io.on("connection", async (socket) => {
                 message,
             },
         });
-        socket.to("global").emit("receive_message", newMessage);
 
+        // To broadcast to all people (except sender)
+        socket.to("global").emit("receive_message", newMessage);
+        // To send the message to the sender
         socket.emit("receive_message", newMessage);
     });
 });
